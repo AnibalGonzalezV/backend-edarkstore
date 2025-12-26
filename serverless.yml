@@ -1,0 +1,74 @@
+service: backend-edarkstore
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9 # O la versión que tengas instalada
+  region: us-east-1
+  environment:
+    DYNAMODB_TABLE: edarkstore-indicators
+    S3_BUCKET: edarkstore-bucket
+
+functions:
+  obtenerUF:
+    handler: handler.obtener_uf
+    events:
+      - http:
+          path: obtener-uf
+          method: post
+  obtenerDolar:
+    handler: handler.obtener_dolar
+    events:
+      - schedule: cron(0 9 * * ? *) # Todos los días a las 9 AM UTC
+      - http:
+          path: obtener-dolar
+          method: post
+  obtenerDatos:
+    handler: handler.obtener_datos
+    events:
+      - http:
+          path: obtener-datos
+          method: get
+          cors: true
+
+plugins:
+  - serverless-dynamodb
+  - serverless-s3-local
+  - serverless-offline # Importante: este debe ir al final
+
+custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      migrate: true # Crea las tablas automáticamente al iniciar
+  s3:
+    host: localhost
+    directory: ./s3-local # Carpeta donde se guardarán los archivos simulados
+
+resources:
+  Resources:
+    # Definición de la Tabla DynamoDB para uso local y remoto
+    IndicatorsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    
+    # Definición del Bucket S3
+    FilesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.S3_BUCKET}
