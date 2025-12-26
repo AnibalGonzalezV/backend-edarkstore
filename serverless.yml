@@ -3,7 +3,7 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: python3.9 # O la versión que tengas instalada
+  runtime: python3.9
   region: us-east-1
   environment:
     DYNAMODB_TABLE: edarkstore-indicators
@@ -19,7 +19,7 @@ functions:
   obtenerDolar:
     handler: handler.obtener_dolar
     events:
-      - schedule: cron(0 9 * * ? *) # Todos los días a las 9 AM UTC
+      - schedule: cron(0 9 * * ? *) # Todos los días a las 9 AM
       - http:
           path: obtener-dolar
           method: post
@@ -34,7 +34,7 @@ functions:
 plugins:
   - serverless-dynamodb
   - serverless-s3-local
-  - serverless-offline # Importante: este debe ir al final
+  - serverless-offline
 
 custom:
   dynamodb:
@@ -42,17 +42,17 @@ custom:
       - dev
     start:
       port: 8000
-      inMemory: true
+      inMemory: false
+      dbPath: ./.dynamodb
       heapInitial: 200m
       heapMax: 1g
-      migrate: true # Crea las tablas automáticamente al iniciar
+      migrate: true
   s3:
     host: localhost
     directory: ./s3-local # Carpeta donde se guardarán los archivos simulados
 
 resources:
   Resources:
-    # Definición de la Tabla DynamoDB para uso local y remoto
     IndicatorsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -67,7 +67,6 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
     
-    # Definición del Bucket S3
     FilesBucket:
       Type: AWS::S3::Bucket
       Properties:

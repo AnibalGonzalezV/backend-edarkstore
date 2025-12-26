@@ -83,7 +83,3 @@ Endpoint `obtener-datos`
 Visualización de los PDFs generados dentro del bucket simulado en la carpeta del proyecto.
 
 ![Carpeta S3](./evidencia/s3.png)
-
-### 4. Interfaz de Usuario (Frontend)
-El sitio web consumiendo el API local y listando los indicadores.
-![Frontend React](./evidencia/web.png)
